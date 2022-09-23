@@ -175,7 +175,7 @@ function buildVariant(lines, variant) {
     attrs.push(`STABLE-VARIANT-ID="${variant.stableVariantId}"`);
   }
   lines.push(`${name}:${attrs.join(',')}`);
-  if (!variant.isIFrameOnly) {
+  if (!variant.isIFrameOnly && !variant.isImageOnly) {
     lines.push(`${variant.uri}`);
   }
 }
