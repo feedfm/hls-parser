@@ -133,6 +133,7 @@ This section describes the structure of the object returned by `parse()` method.
 | ----------------- | -------- | -------- | --------- | ------------- |
 | `uri`        | string  | Yes       | N/A        | URI of the variant playlist  |
 | `isIFrameOnly`  | boolean   | No       | undefined | `true` if the variant is an I-frame media playlist. See [EXT-X-I-FRAME-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.3) |
+| `isImageOnly`  | boolean   | No       | undefined | `true` if the variant is an Image media playlist. See [EXT-X-IMAGE-STREAM-INF](https://developer.roku.com/docs/developer-program/media-playback/trick-mode/hls-and-dash.md) |
 | `bandwidth` | number  | Yes       | N/A        | See BANDWIDTH attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2) |
 | `averageBandwidth`      | number    | No       | undefined | See AVERAGE-BANDWIDTH attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.4.2) |
 | `score`      | number    | No       | undefined | See SCORE attribute in [EXT-X-STREAM-INF](https://tools.ietf.org/html/draft-pantos-hls-rfc8216bis-08#section-4.4.6.2) |
@@ -182,6 +183,7 @@ This section describes the structure of the object returned by `parse()` method.
 | `endlist`                   | boolean | No       | false        | See [EXT-X-ENDLIST](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.3.4) |
 | `playlistType`              | string | No       | undefined        | See [EXT-X-PLAYLIST-TYPE](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.3.5) |
 | `isIFrame`                  | boolean | No       | undefined        | See [EXT-X-I-FRAMES-ONLY](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.3.6) |
+| `isImage`                  | boolean | No       | undefined        | See [EXT-X-IMAGES-ONLY](https://developer.roku.com/docs/developer-program/media-playback/trick-mode/hls-and-dash.md) |
 | `segments`                  | [`Segment`] | No       | []        | A list of available segments |
 | `prefetchSegments`          | [`PrefetchSegment`] | No       | []        | A list of available prefetch segments |
 | `lowLatencyCompatibility`  | object ({canBlockReload: boolean, canSkipUntil: number, holdBack: number, partHoldBack: number})   | No       | undefined | See `CAN-BLOCK-RELOAD`, `CAN-SKIP-UNTIL`, `HOLD-BACK`, and `PART-HOLD-BACK` attributes in [EXT-X-SERVER-CONTROL](https://developer.apple.com/documentation/http_live_streaming/protocol_extension_for_low-latency_hls_preliminary_specification#3281374) |
@@ -196,6 +198,8 @@ This section describes the structure of the object returned by `parse()` method.
 | `duration`  | number   | Yes*       | N/A | See [EXTINF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.2.1) *Not required if the segment contains `EXT-X-PRELOAD-HINT` tag |
 | `title`  | string   | No       | undefined | See [EXTINF](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.2.1) |
 | `byterange`  | object ({length: number, offset: number})   | No       | undefined | See [EXT-X-BYTERANGE](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.2.2) |
+| `layout`  | object ({columns: number, rows: number})   | No       | undefined | See [EXT-X-TILES](https://developer.roku.com/docs/developer-program/media-playback/trick-mode/hls-and-dash.md) |
+| `resolution`  | object ({width: number, height: number})   | No       | undefined | See [EXT-X-TILES](https://developer.roku.com/docs/developer-program/media-playback/trick-mode/hls-and-dash.md) |
 | `discontinuity`  | boolean   | No       | undefined | See [EXT-X-DISCONTINUITY](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-4.3.2.3) |
 | `mediaSequenceNumber`  | number   | No       | 0 | See the description about 'Media Sequence Number' in [3. Media Segments](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#page-5) |
 | `discontinuitySequence`  | number   | No       | 0 | See the description about 'Discontinuity Sequence Number' in [6.2.1. General Server Responsibilities](https://tools.ietf.org/html/draft-pantos-http-live-streaming-23#section-6.2.1) |
