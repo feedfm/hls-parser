@@ -8,7 +8,8 @@ const ALLOW_REDUNDANCY = [
   '#EXT-X-CUE-OUT',
   '#EXT-X-CUE-IN',
   '#EXT-X-KEY',
-  '#EXT-X-MAP'
+  '#EXT-X-MAP',
+  '#EXT-X-TILES'
 ];
 
 const SKIP_IF_REDUNDANT = [
@@ -109,12 +110,14 @@ function buildKey(key, isSessionKey) {
 }
 
 function buildVariant(lines, variant) {
-  const name = variant.isIFrameOnly ? '#EXT-X-I-FRAME-STREAM-INF' : '#EXT-X-STREAM-INF';
+  const name = variant.isImageOnly ? '#EXT-X-IMAGE-STREAM-INF' 
+                                   : variant.isIFrameOnly ? '#EXT-X-I-FRAME-STREAM-INF' 
+                                                          : '#EXT-X-STREAM-INF';
   const attrs = [`BANDWIDTH=${variant.bandwidth}`];
   if (variant.averageBandwidth) {
     attrs.push(`AVERAGE-BANDWIDTH=${variant.averageBandwidth}`);
   }
-  if (variant.isIFrameOnly) {
+  if (variant.isIFrameOnly || variant.isImageOnly) {
     attrs.push(`URI="${variant.uri}"`);
   }
   if (variant.codecs) {
@@ -251,6 +254,9 @@ function buildMediaPlaylist(lines, playlist) {
   if (playlist.isIFrame) {
     lines.push(`#EXT-X-I-FRAMES-ONLY`);
   }
+  if (playlist.isImage) {
+    lines.push(`#EXT-X-IMAGES-ONLY`);
+  }
   if (playlist.skip > 0) {
     lines.push(`#EXT-X-SKIP:SKIPPED-SEGMENTS=${playlist.skip}`);
   }
@@ -328,6 +334,9 @@ function buildSegment(lines, segment, lastKey, lastMap, version = 1) {
   lines.push(`#EXTINF:${duration},${unescape(encodeURIComponent(segment.title || ''))}`);
   if (segment.byterange) {
     lines.push(`#EXT-X-BYTERANGE:${buildByteRange(segment.byterange)}`);
+  }
+  if (segment.resolution && segment.layout && segment.duration) {
+    lines.push(`#EXT-X-TILES:RESOLUTION=${segment.resolution.width}x${segment.resolution.height},LAYOUT=${segment.layout.columns}x${segment.layout.rows},DURATION=${segment.duration}`);
   }
   Array.prototype.push.call(lines, `${segment.uri}`); // URIs could be redundant when EXT-X-BYTERANGE is used
   return [lastKey, lastMap, markerType];

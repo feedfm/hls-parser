@@ -260,6 +260,8 @@ class Segment extends Data {
     map,
     programDateTime,
     dateRange,
+    layout,
+    resolution,
     markers = [],
     parts = []
   }) {
@@ -280,6 +282,8 @@ class Segment extends Data {
     this.dateRange = dateRange;
     this.markers = markers;
     this.parts = parts;
+    this.layout = layout;
+    this.resolution = resolution;
   }
 }
 

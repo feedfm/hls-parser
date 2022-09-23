@@ -41,6 +41,7 @@ function getTagCategory(tagName) {
     case 'EXT-X-SCTE35':
     case 'EXT-X-PART':
     case 'EXT-X-PRELOAD-HINT':
+    case 'EXT-X-TILES':
       return 'Segment';
     case 'EXT-X-TARGETDURATION':
     case 'EXT-X-MEDIA-SEQUENCE':
@@ -48,6 +49,7 @@ function getTagCategory(tagName) {
     case 'EXT-X-ENDLIST':
     case 'EXT-X-PLAYLIST-TYPE':
     case 'EXT-X-I-FRAMES-ONLY':
+    case 'EXT-X-IMAGES-ONLY':
     case 'EXT-X-SERVER-CONTROL':
     case 'EXT-X-PART-INF':
     case 'EXT-X-PREFETCH':
@@ -57,6 +59,7 @@ function getTagCategory(tagName) {
     case 'EXT-X-MEDIA':
     case 'EXT-X-STREAM-INF':
     case 'EXT-X-I-FRAME-STREAM-INF':
+    case 'EXT-X-IMAGE-STREAM-INF':
     case 'EXT-X-SESSION-DATA':
     case 'EXT-X-SESSION-KEY':
       return 'MasterPlaylist';
@@ -81,6 +84,11 @@ function parseBYTERANGE(param) {
 function parseResolution(str) {
   const pair = utils.splitAt(str, 'x');
   return {width: utils.toNumber(pair[0]), height: utils.toNumber(pair[1])};
+}
+
+function parseLayout(str) {
+  const pair = utils.splitAt(str, 'x');
+  return {columns: utils.toNumber(pair[0]), rows: utils.toNumber(pair[1])};
 }
 
 function parseAllowedCpc(str) {
@@ -150,6 +158,9 @@ function parseAttributeList(param) {
       case 'RESOLUTION':
         attributes[key] = parseResolution(val);
         break;
+      case 'LAYOUT':
+        attributes[key] = parseLayout(val);
+        break;
       case 'ALLOWED-CPC':
         attributes[key] = parseAllowedCpc(val);
         break;
@@ -203,6 +214,7 @@ function parseTagParam(name, param) {
     case 'EXT-X-DISCONTINUITY':
     case 'EXT-X-ENDLIST':
     case 'EXT-X-I-FRAMES-ONLY':
+    case 'EXT-X-IMAGES-ONLY':
     case 'EXT-X-INDEPENDENT-SEGMENTS':
     case 'EXT-X-CUE-IN':
       return [null, null];
@@ -225,6 +237,7 @@ function parseTagParam(name, param) {
     case 'EXT-X-MEDIA':
     case 'EXT-X-STREAM-INF':
     case 'EXT-X-I-FRAME-STREAM-INF':
+    case 'EXT-X-IMAGE-STREAM-INF':
     case 'EXT-X-SESSION-DATA':
     case 'EXT-X-SESSION-KEY':
     case 'EXT-X-START':
@@ -234,6 +247,7 @@ function parseTagParam(name, param) {
     case 'EXT-X-PRELOAD-HINT':
     case 'EXT-X-RENDITION-REPORT':
     case 'EXT-X-SKIP':
+    case 'EXT-X-TILES':
       return [null, parseAttributeList(param)];
     case 'EXTINF':
       return [parseEXTINF(param), null];
@@ -318,7 +332,7 @@ function matchTypes(attrs, variant, params) {
   }
 }
 
-function parseVariant(lines, variantAttrs, uri, iFrameOnly, params) {
+function parseVariant(lines, variantAttrs, uri, iFrameOnly, imageOnly, params) {
   const variant = new Variant({
     uri,
     bandwidth: variantAttrs['BANDWIDTH'],
@@ -354,6 +368,7 @@ function parseVariant(lines, variantAttrs, uri, iFrameOnly, params) {
   }
   matchTypes(variantAttrs, variant, params);
   variant.isIFrameOnly = iFrameOnly;
+  variant.isImageOnly = imageOnly;
   return variant;
 }
 
@@ -399,7 +414,7 @@ function parseMasterPlaylist(lines, params) {
       if (typeof uri !== 'string' || uri.startsWith('#EXT')) {
         utils.INVALIDPLAYLIST('EXT-X-STREAM-INF must be followed by a URI line');
       }
-      const variant = parseVariant(lines, attributes, uri, false, params);
+      const variant = parseVariant(lines, attributes, uri, false, false, params);
       if (variant) {
         if (typeof variant.score === 'number') {
           variantIsScored = true;
@@ -410,7 +425,12 @@ function parseMasterPlaylist(lines, params) {
         playlist.variants.push(variant);
       }
     } else if (name === 'EXT-X-I-FRAME-STREAM-INF') {
-      const variant = parseVariant(lines, attributes, attributes.URI, true, params);
+      const variant = parseVariant(lines, attributes, attributes.URI, true, false, params);
+      if (variant) {
+        playlist.variants.push(variant);
+      }
+    } else if (name === 'EXT-X-IMAGE-STREAM-INF') {
+      const variant = parseVariant(lines, attributes, attributes.URI, false, true, params);
       if (variant) {
         playlist.variants.push(variant);
       }
@@ -488,6 +508,10 @@ function parseSegment(lines, uri, start, end, mediaSequenceNumber, discontinuity
       }
       segment.duration = value.duration;
       segment.title = value.title;
+    } else if (name === 'EXT-X-TILES') {
+      segment.duration = attributes['DURATION'];
+      segment.resolution = attributes['RESOLUTION'];
+      segment.layout = attributes['LAYOUT'];
     } else if (name === 'EXT-X-BYTERANGE') {
       if (params.compatibleVersion < 4) {
         params.compatibleVersion = 4;
@@ -677,6 +701,11 @@ function parseMediaPlaylist(lines, params) {
         params.compatibleVersion = 4;
       }
       playlist.isIFrame = true;
+    } else if (name === 'EXT-X-IMAGES-ONLY') {
+      if (params.compatibleVersion < 4) {
+        params.compatibleVersion = 4;
+      }
+      playlist.isImage = true;
     } else if (name === 'EXT-X-INDEPENDENT-SEGMENTS') {
       if (playlist.independentSegments) {
         utils.INVALIDPLAYLIST('EXT-X-INDEPENDENT-SEGMENTS tag MUST NOT appear more than once in a Playlist');
